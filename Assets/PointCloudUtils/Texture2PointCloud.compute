@@ -1,0 +1,33 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+Texture2D<float4> PositionTex;
+Texture2D<float4> ColorTex;
+
+struct PointCloudPoint
+{
+	float3 position;
+	float4 color;
+};
+RWStructuredBuffer<PointCloudPoint> _PointCloudPoints;
+float3 _Center;
+SamplerState _LinearClamp;
+float4x4 _TRS;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	float w, h;
+	PositionTex.GetDimensions(w, h);
+	float2 uv = float2((float)id.x / w, (float)id.y / h);
+
+	int index = id.x + id.y*w;
+	float4 pos = float4((PositionTex[id.xy].rgb - _Center),1);
+	pos = mul(_TRS, pos);
+	float4 col = ColorTex[id.xy];
+	_PointCloudPoints[index].position = pos;
+	_PointCloudPoints[index].color = col;
+
+}

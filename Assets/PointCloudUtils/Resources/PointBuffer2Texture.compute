@@ -1,0 +1,26 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> PositionTex;
+RWTexture2D<float4> ColorTex;
+StructuredBuffer<float3> PositionBuffer;
+StructuredBuffer<float3> ColorBuffer;
+
+float _ColorCoefficient;
+float3 _Center;
+float _Scale;
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	float w, h;
+	PositionTex.GetDimensions(w, h);
+	int index = id.x + id.y*w;
+	float3 pos = PositionBuffer[index];
+	float3 col = ColorBuffer[index];
+	pos = (pos - _Center)*_Scale;
+	col *= _ColorCoefficient;
+	PositionTex[id.xy] = float4(pos, 1);
+	ColorTex[id.xy] = float4(col, 1);
+}
