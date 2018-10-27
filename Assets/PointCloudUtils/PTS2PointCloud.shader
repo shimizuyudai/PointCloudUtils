@@ -1,4 +1,4 @@
-﻿Shader "Custom/PointCloudView"{
+﻿Shader "Custom/PTS2PointCloud"{
 
 	SubShader{
 		ZWrite On
@@ -20,7 +20,7 @@
 	float _PointSize;
 	float3 _Center;
 	float4x4 _TRS;
-
+	float _ColorCoefficient;
 	struct PointCloudPoint
 	{
 		float3 position;
@@ -43,7 +43,7 @@
 		output.pos = pos;
 
 		output.col = PointCloudPoints[id].color;
-		output.col.rgb /= 255.0;
+		output.col.rgb *= _ColorCoefficient;
 		output.tex = float2(0, 0);
 		return output;
 	}

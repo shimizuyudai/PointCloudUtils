@@ -22,14 +22,19 @@ namespace PointCloudUtils
         Texture texture;
         [SerializeField]
         Shader shader;
+
         Material material;
 
         ComputeBuffer computeBuffer;
 
         Queue queue;
-
+        
         [SerializeField]
         int maxCount;
+        [SerializeField]
+        bool isCentering;
+        [SerializeField]
+        bool isNormalizedColor;
         [SerializeField]
         bool isAutoLoad = true;
 
@@ -111,7 +116,6 @@ namespace PointCloudUtils
             var points = new List<PointCloudPoint>();
             var min = Vector3.one * float.MaxValue;
             var max = Vector3.one * float.MinValue;
-
             await Task.Run(() =>
                 {
                     using (var streamReader = new StreamReader(path))
@@ -155,9 +159,11 @@ namespace PointCloudUtils
             if (!isRunning) return;
             computeBuffer = new ComputeBuffer(points.Count, Marshal.SizeOf(typeof(PointCloudPoint)));
             computeBuffer.SetData(points.ToArray());
+            material.SetFloat("_ColorCoefficient", isNormalizedColor ? 1 : 1f/255f);
             material.SetBuffer("PointCloudPoints", computeBuffer);
             var center = (max + min) / 2f;
-            material.SetVector("_Center", center);
+            material.SetVector("_Center", isCentering ? center : Vector3.zero);
+            print(computeBuffer.count);
         }
 
         private PointCloudPoint GetPointCloudPoint(string line)

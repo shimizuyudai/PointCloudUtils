@@ -20,6 +20,8 @@ namespace PointCloudUtils
         float scale = 1;
         [SerializeField]
         private bool isCentering;
+        [SerializeField]
+        private bool isNormalizedColor;
         private const int maxTextureSize = 2048;
         Queue queue;
 
@@ -33,7 +35,7 @@ namespace PointCloudUtils
 
         void OnGUI()
         {
-
+            isNormalizedColor = EditorGUILayout.ToggleLeft("IsNormalizedColor", isNormalizedColor);
             isCentering = EditorGUILayout.ToggleLeft("IsCentering", isCentering);
             maxCount = EditorGUILayout.IntField("MaxCount", maxCount);
             scale = EditorGUILayout.FloatField("Scale", scale);
@@ -165,7 +167,7 @@ namespace PointCloudUtils
             computeShader.SetTexture(0, "ColorTex", colorRenderTexture);
             computeShader.SetTexture(0, "PositionTex", positionRenderTexture);
             computeShader.SetVector("_Center", isCentering ? (min + max) / 2f : Vector3.zero);
-            computeShader.SetFloat("_ColorCoefficient", 1f / 255f);
+            computeShader.SetFloat("_ColorCoefficient", isNormalizedColor ? 1f : 1f / 255f);
             computeShader.SetFloat("_Scale", scale);
             computeShader.SetBuffer(0, "ColorBuffer", colorBuffer);
             computeShader.SetBuffer(0, "PositionBuffer", positionBuffer);
