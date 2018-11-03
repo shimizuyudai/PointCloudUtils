@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 public class VTFPointCloudView : MonoBehaviour
 {
     [SerializeField]
-    Texture2D pointTexture, colorTexture, positionTexture;
+    public Texture2D pointTexture, colorTexture, positionTexture;
     [SerializeField]
     Shader shader;
     [SerializeField]

@@ -21,8 +21,13 @@ namespace PointCloudUtils
         [SerializeField]
         private bool isCentering;
         [SerializeField]
-        private bool isNormalizedColor;
+        private bool isUseNormalizedColor;
         private const int maxTextureSize = 2048;
+        [SerializeField]
+        private bool isForceControlTexutureSize;
+        [SerializeField]
+        private int forceTextureSize;
+
         Queue queue;
 
         bool isRunning;
@@ -35,10 +40,16 @@ namespace PointCloudUtils
 
         void OnGUI()
         {
-            isNormalizedColor = EditorGUILayout.ToggleLeft("IsNormalizedColor", isNormalizedColor);
+            isUseNormalizedColor = EditorGUILayout.ToggleLeft("IsNormalizedColor", isUseNormalizedColor);
             isCentering = EditorGUILayout.ToggleLeft("IsCentering", isCentering);
             maxCount = EditorGUILayout.IntField("MaxCount", maxCount);
             scale = EditorGUILayout.FloatField("Scale", scale);
+            isForceControlTexutureSize = EditorGUILayout.ToggleLeft("IsForceControlSize", isForceControlTexutureSize);
+            if (isForceControlTexutureSize)
+            {
+                forceTextureSize = EditorGUILayout.IntField("ForceTextureSize", forceTextureSize);
+            }
+           
             if (GUILayout.Button("Convert")) Convert();
 
         }
@@ -107,7 +118,7 @@ namespace PointCloudUtils
                         var rate = (float)pointNUM / totalCount;
 
                         var next = 0f;
-                        size = Mathf.Min(maxTextureSize, Mathf.NextPowerOfTwo(Mathf.CeilToInt(Mathf.Sqrt(totalCount))));
+                        size = isForceControlTexutureSize ? forceTextureSize : Mathf.Min(maxTextureSize, Mathf.NextPowerOfTwo(Mathf.CeilToInt(Mathf.Sqrt(totalCount))));
                         while (!streamReader.EndOfStream)
                         {
                             line = streamReader.ReadLine();
@@ -148,6 +159,25 @@ namespace PointCloudUtils
                             if (!isRunning) break;
                         }
                     }
+
+                    if(isForceControlTexutureSize)
+                    {
+                        var destNUM = forceTextureSize * forceTextureSize;
+                        var num = destNUM - count;
+                        var index = 0;
+                        var step = Mathf.FloorToInt((float)count / num);
+                        step = Mathf.Max(1,step);
+                        for (var i = 0; i < num; i++)
+                        {
+                            colors.Add(colors[index]);
+                            positions.Add(positions[index]);
+                            index += step;
+                            if (index >= count)
+                            {
+                                index = 0;
+                            }
+                        }
+                    }
                 }
                 );
 
@@ -167,7 +197,7 @@ namespace PointCloudUtils
             computeShader.SetTexture(0, "ColorTex", colorRenderTexture);
             computeShader.SetTexture(0, "PositionTex", positionRenderTexture);
             computeShader.SetVector("_Center", isCentering ? (min + max) / 2f : Vector3.zero);
-            computeShader.SetFloat("_ColorCoefficient", isNormalizedColor ? 1f : 1f / 255f);
+            computeShader.SetFloat("_ColorCoefficient", isUseNormalizedColor ? 1f : 1f / 255f);
             computeShader.SetFloat("_Scale", scale);
             computeShader.SetBuffer(0, "ColorBuffer", colorBuffer);
             computeShader.SetBuffer(0, "PositionBuffer", positionBuffer);
